@@ -35,7 +35,7 @@ def sandbox_node(state: AgentAnalysisState) -> dict:
     if result["stdout"]:
         print(f"[Sandbox] stdout: {result['stdout'][:200]}")
     if result["stderr"]:
-        print(f"[Sandbox] stderr: {result['stderr'][:200]}")
+        print(f"[Sandbox] stderr: {result['stderr'][:3000]}")
 
     artifact_paths = list(state.get("artifact_paths", []))
     artifact_paths.extend(result.get("artifacts", []))
