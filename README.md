@@ -39,6 +39,8 @@ AutoInsight was built to explore what it takes to make an agentic system **trust
 
 A 7-node LangGraph state machine, with a conditional routing loop for retries:
 
+![AutoInsight Architecture](docs/architecture.png)
+
 ```
  Profiler → Router → Planner → [human approval] → Coder → Sandbox → Critic
                                                        ↑              │
