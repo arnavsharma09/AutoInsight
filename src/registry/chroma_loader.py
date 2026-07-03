@@ -1,7 +1,5 @@
 import chromadb
 from chromadb.utils import embedding_functions
-import json
-import os
 
 CHROMA_PATH = ".chroma"
 COLLECTION_NAME = "statistical_methodologies"

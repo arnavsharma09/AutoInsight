@@ -1,5 +1,4 @@
 import ast
-from typing import Optional
 
 
 FORBIDDEN_IMPORTS = {

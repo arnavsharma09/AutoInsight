@@ -62,7 +62,7 @@ def execute_code(code: str) -> dict:
     execution_success = False
 
     try:
-        msg_id = client.execute(code)
+        client.execute(code)
         deadline = time.time() + EXECUTION_TIMEOUT
 
         while time.time() < deadline:
