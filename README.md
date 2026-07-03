@@ -56,13 +56,13 @@ A 7-node LangGraph state machine, with a conditional routing loop for retries:
 |---|---|
 | **Profiler** | Polars-based statistical profiling — dtypes, missingness, cardinality, skewness, Shapiro-Wilk normality tests |
 | **Router** | Hybrid methodology selection: fast rule-based JSON matching first, falls back to ChromaDB semantic search over 60+ statistical method descriptions |
-| **Planner** | LLM (Groq/Llama 3.3 70B) generates a 3–6 step analysis plan via structured tool-calling, constrained by hard rules derived from the data profile |
+| **Planner** | LLM (Anthropic Claude) generates a 3–6 step analysis plan via structured tool-calling, constrained by hard rules derived from the data profile |
 | **Coder** | LLM generates Polars/SciPy code per step, using only an approved API surface, with prior error context injected on retries |
 | **Sandbox** | Executes code in an isolated Docker container via Jupyter kernel protocol, after AST-level security scanning (blocks `os`, `subprocess`, `eval`, dangerous dunder access, etc.) |
 | **Critic** | Validates execution success *and* statistical assumption correctness (e.g. flags a parametric test run on non-normal data and demands the non-parametric equivalent); bounded retries with graceful degradation to "low confidence" rather than infinite loops |
 | **Reporter** | LLM writes the final business-facing report strictly from verified metrics — no invented numbers, explicit confidence levels and limitations per finding |
 
-**Stack:** LangGraph · Polars · ChromaDB · FastAPI · Streamlit · Groq (Llama 3.3 70B) · Docker · Jupyter kernel protocol · LangSmith (tracing) · DeepEval (automated testing) · SciPy / statsmodels / scikit-posthocs
+**Stack:** LangGraph · Polars · ChromaDB · FastAPI · Streamlit · Anthropic Claude · Docker · Jupyter kernel protocol · LangSmith (tracing) · DeepEval (automated testing) · SciPy / statsmodels / scikit-posthocs
 
 ---
 
@@ -73,6 +73,7 @@ A 7-node LangGraph state machine, with a conditional routing loop for retries:
 - **Bounded self-correction.** Failed or statistically invalid code goes back to the Coder with the exact error and Critic feedback injected into the next prompt — capped at a configurable retry limit, after which the step is marked low-confidence rather than looping forever or silently failing.
 - **Grounded reporting.** The Reporter is evaluated with DeepEval's faithfulness metrics to catch cases where the LLM's narrative drifts from the actual computed metrics — a structural test suite (16+ tests) also directly validates router intent-detection, non-parametric fallback logic, and critic violation-detection deterministically, without depending on LLM output at all.
 - **Human-in-the-loop by design.** The graph is compiled with an explicit interrupt before code execution begins — the analysis plan is always shown to a human for approval first, rather than an agent silently running arbitrary generated code against real data.
+- **Artifacts retrieved and rendered, not just referenced.** Generated Plotly visualizations are pulled out of the isolated sandbox container back to the host filesystem after each step and rendered inline in the Streamlit UI — so the final output is an interactive chart a user can actually see, not just a file path mentioned in a report.
 
 ---
 
