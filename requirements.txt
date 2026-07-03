@@ -1,7 +1,7 @@
 chromadb==0.5.23
 deepeval==2.0.9
 fastapi==0.115.6
-groq==0.37.1
+anthropic==0.40.0
 ipykernel==6.29.5
 jupyter_client==8.6.3
 langchain==0.3.30

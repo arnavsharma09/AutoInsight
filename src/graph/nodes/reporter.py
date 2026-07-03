@@ -1,6 +1,6 @@
 import os
 import json
-from groq import Groq
+from anthropic import Anthropic
 from dotenv import load_dotenv
 from src.graph.state import AgentAnalysisState
 from langsmith import traceable
@@ -86,20 +86,17 @@ Write the complete analysis report now using only the verified data above:"""
 def reporter_node(state: AgentAnalysisState) -> dict:
     print("[Reporter] Generating final analysis report...")
 
-    client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+    client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
     prompt = build_reporter_prompt(state)
 
-    response = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
+    response = client.messages.create(
+        model="claude-sonnet-5",
         max_tokens=2000,
-        temperature=0.3,
-        messages=[
-            {"role": "system", "content": REPORTER_SYSTEM_PROMPT},
-            {"role": "user", "content": prompt}
-        ]
+        system=REPORTER_SYSTEM_PROMPT,
+        messages=[{"role": "user", "content": prompt}]
     )
 
-    report = response.choices[0].message.content.strip()
+    report = response.content[0].text.strip()
     print("[Reporter] Report generated successfully.")
     print(f"[Reporter] Report length: {len(report.split())} words")
 

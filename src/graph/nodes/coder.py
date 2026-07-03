@@ -1,7 +1,7 @@
-import os
 import re
+import os
 import time
-from groq import Groq
+from anthropic import Anthropic
 from dotenv import load_dotenv
 from src.graph.state import AgentAnalysisState
 from langsmith import traceable
@@ -124,18 +124,15 @@ def coder_node(state: AgentAnalysisState) -> dict:
     if state.get("retry_count", 0) > 0:
         print(f"[Coder] Retry attempt {state['retry_count']} — applying critic feedback")
 
-    client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+    client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
     prompt = build_coder_prompt(state)
 
     try:
-        response = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+        response = client.messages.create(
+            model="claude-sonnet-5",
             max_tokens=2000,
-            temperature=0.2,
-            messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": prompt}
-            ]
+            system=SYSTEM_PROMPT,
+            messages=[{"role": "user", "content": prompt}]
         )
     except Exception as e:
         if "rate_limit" in str(e).lower() or "429" in str(e):
@@ -144,7 +141,7 @@ def coder_node(state: AgentAnalysisState) -> dict:
             raise
         raise
 
-    raw_code = response.choices[0].message.content
+    raw_code = response.content[0].text
     clean_code = clean_code_output(raw_code)
 
     print(f"[Coder] Generated {len(clean_code.splitlines())} lines of code")

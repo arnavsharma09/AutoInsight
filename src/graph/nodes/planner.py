@@ -1,7 +1,6 @@
-import json
 import os
 import time
-from groq import Groq
+from anthropic import Anthropic
 from dotenv import load_dotenv
 from src.graph.state import AgentAnalysisState, StrategicStep
 from langsmith import traceable
@@ -11,7 +10,7 @@ load_dotenv()
 PLANNING_TOOL = {
     "name": "generate_analysis_plan",
     "description": "Generate a structured step-by-step analysis plan for the given dataset and business question.",
-    "parameters": {
+    "input_schema": {
         "type": "object",
         "properties": {
             "steps": {
@@ -82,20 +81,20 @@ Call the generate_analysis_plan tool with your structured plan now."""
 
 @traceable(name="planner_node", run_type="llm")
 def planner_node(state: AgentAnalysisState) -> dict:
-    print("[Planner] Generating analysis plan with Groq...")
+    print("[Planner] Generating analysis plan with Anthropic...")
 
-    client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+    client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
     profile = state["data_profile"]
     router_output = state.get("router_output", "No routing output available.")
     business_query = state["business_query"]
     prompt = build_planner_prompt(profile, router_output, business_query)
 
     try:
-        response = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+        response = client.messages.create(
+            model="claude-sonnet-5",
             max_tokens=2000,
-            tools=[{"type": "function", "function": PLANNING_TOOL}],
-            tool_choice={"type": "function", "function": {"name": "generate_analysis_plan"}},
+            tools=[PLANNING_TOOL],
+            tool_choice={"type": "tool", "name": "generate_analysis_plan"},
             messages=[{"role": "user", "content": prompt}]
         )
     except Exception as e:
@@ -105,8 +104,8 @@ def planner_node(state: AgentAnalysisState) -> dict:
             raise
         raise
 
-    tool_call = response.choices[0].message.tool_calls[0]
-    plan_data = json.loads(tool_call.function.arguments)
+    tool_use_block = next(b for b in response.content if b.type == "tool_use")
+    plan_data = tool_use_block.input
     steps_raw = plan_data["steps"]
 
     steps: list[StrategicStep] = [
