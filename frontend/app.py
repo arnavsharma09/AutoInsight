@@ -179,9 +179,10 @@ elif st.session_state.status == "complete":
         data = r.json()
         report = data.get("report", "")
         confidence = data.get("confidence_signals", {})
+        artifact_paths = data.get("artifact_paths", [])
         st.session_state.report = report
 
-        tab1, tab2 = st.tabs(["📄 Report", "📊 Confidence Signals"])
+        tab1, tab2, tab3 = st.tabs(["📄 Report", "📊 Confidence Signals", "📈 Visualizations"])
 
         with tab1:
             st.markdown(report)
@@ -199,6 +200,20 @@ elif st.session_state.status == "complete":
                     st.markdown(f"{color} **{step}**: {level.upper()}")
             else:
                 st.info("No confidence signals available.")
+
+        with tab3:
+            if artifact_paths:
+                for path in artifact_paths:
+                    st.markdown(f"**{path.split('/')[-1]}**")
+                    try:
+                        with open(path, "r", encoding="utf-8") as f:
+                            html_content = f.read()
+                        st.components.v1.html(html_content, height=500, scrolling=True)
+                    except FileNotFoundError:
+                        st.warning(f"File not found on disk: {path}")
+                    st.markdown("---")
+            else:
+                st.info("No visualization artifacts were generated for this analysis.")
 
     else:
         st.error("Failed to fetch report.")

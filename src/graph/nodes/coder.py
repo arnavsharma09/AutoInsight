@@ -20,7 +20,7 @@ STRICT RULES:
 7. Every numeric result must be JSON serializable (convert numpy types to float/int)
 8. You MUST write metrics.json using: open('/workspace/metrics.json', 'w')
 9. This code runs inside a secure Docker container where open() is fully allowed.
-10. Do NOT use hasattr() anywhere in your code.
+10. Do NOT use hasattr(), globals(), dir(), locals(), or vars() anywhere in your code.
 11. Keep code concise - maximum 60 lines per step.
 
 AVAILABLE APIS:
@@ -85,7 +85,7 @@ DATASET INFO:
 - Columns: {columns}
 - Dtypes: {datatypes}
 
-IMPORTANT: The variable `df` is already loaded as a Polars DataFrame from a previous step.
+IMPORTANT: The variable `df` is already loaded as a Polars DataFrame from a previous step — just use it directly, do not check whether it exists.
 If this is step 1, load it yourself: df = pl.read_csv('{data_path}')
 
 REMINDER: You MUST save metrics to /workspace/metrics.json using open().
@@ -141,7 +141,7 @@ def coder_node(state: AgentAnalysisState) -> dict:
             raise
         raise
 
-    raw_code = response.content[0].text
+    raw_code = next(b.text for b in response.content if b.type == "text")
     clean_code = clean_code_output(raw_code)
 
     print(f"[Coder] Generated {len(clean_code.splitlines())} lines of code")

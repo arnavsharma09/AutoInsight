@@ -96,7 +96,7 @@ def reporter_node(state: AgentAnalysisState) -> dict:
         messages=[{"role": "user", "content": prompt}]
     )
 
-    report = response.content[0].text.strip()
+    report = next(b.text for b in response.content if b.type == "text").strip()
     print("[Reporter] Report generated successfully.")
     print(f"[Reporter] Report length: {len(report.split())} words")
 
