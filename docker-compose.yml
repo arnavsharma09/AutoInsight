@@ -1,0 +1,24 @@
+services:
+  sandbox:
+    build:
+      context: .
+      dockerfile: Dockerfile.sandbox
+    container_name: autoinsight-sandbox
+    ports:
+      - "8888:8888"
+      - "8889:8889"
+      - "8890:8890"
+      - "8891:8891"
+      - "8892:8892"
+    volumes:
+      - sandbox_workspace:/workspace/artifacts
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; s = socket.socket(); s.settimeout(2); s.connect(('localhost', 8888)); s.close()"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  sandbox_workspace:

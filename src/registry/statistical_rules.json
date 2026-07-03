@@ -1,0 +1,198 @@
+{
+    "version": "1.0",
+    "description": "Deterministic methodology selection rules for AutoInsight Router node",
+    "rules": [
+        {
+            "rule_id": "R001",
+            "name": "Two-Group Comparison — Normal Data",
+            "conditions": {
+                "comparison_groups": 2,
+                "all_groups_normal": true,
+                "data_type": "continuous"
+            },
+            "selected_methodology": "Independent Samples t-Test",
+            "mathematical_justification": "When comparing means of two independent groups and both populations are normally distributed, the independent samples t-test is the most statistically powerful parametric choice. Assumes equal or unequal variances (use Welch correction if Levene's test fails).",
+            "assumptions": [
+                "normality",
+                "independence",
+                "continuous_scale"
+            ],
+            "fallback_if_violated": "R002"
+        },
+        {
+            "rule_id": "R002",
+            "name": "Two-Group Comparison — Non-Normal Data",
+            "conditions": {
+                "comparison_groups": 2,
+                "all_groups_normal": false,
+                "data_type": "continuous"
+            },
+            "selected_methodology": "Mann-Whitney U Test",
+            "mathematical_justification": "When normality assumption is violated (Shapiro-Wilk p < 0.05), the non-parametric Mann-Whitney U test is used. It compares rank distributions rather than means and makes no distributional assumptions.",
+            "assumptions": [
+                "independence",
+                "ordinal_or_continuous"
+            ],
+            "fallback_if_violated": null
+        },
+        {
+            "rule_id": "R003",
+            "name": "Three or More Group Comparison — Normal Data",
+            "conditions": {
+                "comparison_groups": "3+",
+                "all_groups_normal": true,
+                "data_type": "continuous"
+            },
+            "selected_methodology": "One-Way ANOVA with Tukey HSD Post-Hoc",
+            "mathematical_justification": "For comparing means across 3+ independent groups with normal distributions, one-way ANOVA tests the null hypothesis that all group means are equal. Tukey HSD controls family-wise error rate for post-hoc pairwise comparisons.",
+            "assumptions": [
+                "normality",
+                "homogeneity_of_variance",
+                "independence"
+            ],
+            "fallback_if_violated": "R004"
+        },
+        {
+            "rule_id": "R004",
+            "name": "Three or More Group Comparison — Non-Normal Data",
+            "conditions": {
+                "comparison_groups": "3+",
+                "all_groups_normal": false,
+                "data_type": "continuous"
+            },
+            "selected_methodology": "Kruskal-Wallis H Test with Dunn Post-Hoc",
+            "mathematical_justification": "Non-parametric alternative to one-way ANOVA. Kruskal-Wallis tests whether samples originate from the same distribution using rank sums. Dunn's test with Bonferroni correction handles post-hoc pairwise comparisons.",
+            "assumptions": [
+                "independence",
+                "ordinal_or_continuous"
+            ],
+            "fallback_if_violated": null
+        },
+        {
+            "rule_id": "R005",
+            "name": "Correlation Analysis — Normal Data",
+            "conditions": {
+                "analysis_type": "correlation",
+                "all_groups_normal": true,
+                "data_type": "continuous"
+            },
+            "selected_methodology": "Pearson Correlation Coefficient",
+            "mathematical_justification": "Pearson r measures the linear relationship between two continuous normally distributed variables. Ranges from -1 to +1. Assumes bivariate normality and linear relationship.",
+            "assumptions": [
+                "bivariate_normality",
+                "linearity",
+                "no_outliers"
+            ],
+            "fallback_if_violated": "R006"
+        },
+        {
+            "rule_id": "R006",
+            "name": "Correlation Analysis — Non-Normal or Ordinal Data",
+            "conditions": {
+                "analysis_type": "correlation",
+                "all_groups_normal": false,
+                "data_type": "continuous_or_ordinal"
+            },
+            "selected_methodology": "Spearman Rank Correlation",
+            "mathematical_justification": "Non-parametric measure of monotonic relationship between two variables. Uses rank transformations, making it robust to outliers and non-normal distributions. Appropriate for ordinal data or continuous data with normality violations.",
+            "assumptions": [
+                "monotonic_relationship",
+                "independence"
+            ],
+            "fallback_if_violated": null
+        },
+        {
+            "rule_id": "R007",
+            "name": "Categorical Association",
+            "conditions": {
+                "analysis_type": "association",
+                "data_type": "categorical"
+            },
+            "selected_methodology": "Chi-Square Test of Independence with Cramér's V",
+            "mathematical_justification": "Tests whether two categorical variables are independent. Chi-square statistic measures deviation from expected frequencies under independence. Cramér's V provides effect size normalized to [0,1].",
+            "assumptions": [
+                "expected_frequency_>= 5",
+                "independence"
+            ],
+            "fallback_if_violated": "R008"
+        },
+        {
+            "rule_id": "R008",
+            "name": "Categorical Association — Small Samples",
+            "conditions": {
+                "analysis_type": "association",
+                "data_type": "categorical",
+                "small_sample": true
+            },
+            "selected_methodology": "Fisher's Exact Test",
+            "mathematical_justification": "Used when Chi-square expected cell frequencies fall below 5. Fisher's Exact Test computes the exact probability of the observed contingency table under the null hypothesis of independence.",
+            "assumptions": [
+                "independence",
+                "fixed_marginals"
+            ],
+            "fallback_if_violated": null
+        },
+        {
+            "rule_id": "R009",
+            "name": "Linear Relationship Modelling",
+            "conditions": {
+                "analysis_type": "regression",
+                "data_type": "continuous",
+                "predictor_count": "1+"
+            },
+            "selected_methodology": "Ordinary Least Squares Regression with Residual Diagnostics",
+            "mathematical_justification": "OLS minimizes sum of squared residuals to estimate linear relationships. Residual diagnostics (Breusch-Pagan for heteroscedasticity, Durbin-Watson for autocorrelation, VIF for multicollinearity) validate model assumptions.",
+            "assumptions": [
+                "linearity",
+                "homoscedasticity",
+                "independence",
+                "normality_of_residuals"
+            ],
+            "fallback_if_violated": "R010"
+        },
+        {
+            "rule_id": "R010",
+            "name": "Skewed Target Regression",
+            "conditions": {
+                "analysis_type": "regression",
+                "data_type": "continuous",
+                "target_skewed": true
+            },
+            "selected_methodology": "Log-Transformed OLS or Quantile Regression",
+            "mathematical_justification": "When the target variable is highly skewed, log transformation stabilizes variance and reduces skewness before OLS. If transformation is insufficient, quantile regression estimates conditional median rather than mean, robust to outliers and skewness.",
+            "assumptions": [
+                "monotonic_relationship"
+            ],
+            "fallback_if_violated": null
+        },
+        {
+            "rule_id": "R011",
+            "name": "Distribution Analysis — Single Variable",
+            "conditions": {
+                "analysis_type": "distribution",
+                "data_type": "continuous"
+            },
+            "selected_methodology": "Descriptive Statistics with Distribution Fitting",
+            "mathematical_justification": "Computes mean, median, std, IQR, skewness, kurtosis. Fits candidate distributions (normal, log-normal, exponential) using MLE and selects best fit via KS test statistic.",
+            "assumptions": [
+                "sufficient_sample_size"
+            ],
+            "fallback_if_violated": null
+        },
+        {
+            "rule_id": "R012",
+            "name": "Time Series Trend Analysis",
+            "conditions": {
+                "analysis_type": "time_series",
+                "data_type": "continuous"
+            },
+            "selected_methodology": "Mann-Kendall Trend Test with Sen's Slope Estimator",
+            "mathematical_justification": "Mann-Kendall is a non-parametric test for monotonic trend in time series data. Sen's slope provides a robust estimate of trend magnitude. Does not assume normality or linearity.",
+            "assumptions": [
+                "temporal_ordering",
+                "independence_of_residuals"
+            ],
+            "fallback_if_violated": null
+        }
+    ]
+}

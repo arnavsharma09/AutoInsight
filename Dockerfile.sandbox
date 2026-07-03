@@ -1,0 +1,26 @@
+FROM python:3.11-slim
+
+WORKDIR /workspace
+
+RUN pip install --no-cache-dir \
+    ipykernel==6.29.5 \
+    jupyter-client==8.6.3 \
+    polars==1.17.1 \
+    numpy==1.26.4 \
+    scipy==1.13.1 \
+    statsmodels==0.14.4 \
+    plotly==5.24.1 \
+    scikit-learn==1.5.2 \
+    scikit-posthocs==0.9.0
+
+RUN mkdir -p /workspace/artifacts
+
+RUN useradd -m -u 1000 sandbox
+RUN chown -R sandbox:sandbox /workspace
+USER sandbox
+
+COPY --chown=sandbox:sandbox start_kernel.py /workspace/start_kernel.py
+
+EXPOSE 8888 8889 8890 8891 8892
+
+CMD ["python", "/workspace/start_kernel.py"]

@@ -1,0 +1,12 @@
+venv/
+.venv/
+.chroma/
+.pytest_cache/
+.git/
+.gitignore
+.deepeval-cache.json
+.deepeval_telemtry.txt
+workspace/
+__pycache__/
+*.pyc
+.env

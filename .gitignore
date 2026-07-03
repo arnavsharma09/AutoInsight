@@ -1,0 +1,9 @@
+venv/
+.env
+__pycache__/
+*.pyc
+.chroma/
+workspace/
+*.egg-info/
+dist/
+.DS_Store
